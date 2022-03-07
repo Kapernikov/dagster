@@ -81,7 +81,7 @@ RESOURCES_STAGING = {
 RESOURCES_LOCAL = {
     "parquet_io_manager": local_partitioned_parquet_io_manager,
     "warehouse_io_manager": duckdb_partitioned_parquet_io_manager.configured(
-        {"duckdb_path": "hn_duckdb.duckdb"}
+        {"duckdb_path": os.environ["DUCKDB_PATH"]}
     ),
     "pyspark": configured_pyspark,
     "hn_client": hn_api_subsample_client.configured({"sample_rate": 10}),
