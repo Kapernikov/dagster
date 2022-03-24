@@ -35,16 +35,23 @@ class PostgresScheduleStorage(SqlScheduleStorage, ConfigurableClass):
     :py:class:`~dagster.IntSource` and can be configured from environment variables.
     """
 
-    def __init__(self, postgres_url, should_autocreate_tables=True, inst_data=None):
+    def __init__(self, postgres_url, should_autocreate_tables=True, inst_data=None, schema=None):
         self._inst_data = check.opt_inst_param(inst_data, "inst_data", ConfigurableClassData)
         self.postgres_url = postgres_url
         self.should_autocreate_tables = check.bool_param(
             should_autocreate_tables, "should_autocreate_tables"
         )
 
+        self.schema = check.opt_str_param(schema, "schema")
+        if self.schema:
+            connect_args={'options': '-csearch_path={}'.format(self.schema)}
+        else:
+            connect_args={}
+
         # Default to not holding any connections open to prevent accumulating connections per DagsterInstance
         self._engine = create_engine(
-            self.postgres_url, isolation_level="AUTOCOMMIT", poolclass=db.pool.NullPool
+            self.postgres_url, isolation_level="AUTOCOMMIT", poolclass=db.pool.NullPool,
+            connect_args=connect_args
         )
 
         table_names = retry_pg_connection_fn(lambda: db.inspect(self._engine).get_table_names())

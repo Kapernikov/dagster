@@ -38,6 +38,7 @@ def pg_config():
             },
             is_required=False,
         ),
+        "schema": Field(StringSource, is_required=False),
         "should_autocreate_tables": Field(bool, is_required=False, default_value=True),
     }
 

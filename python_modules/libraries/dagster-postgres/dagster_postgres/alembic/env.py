@@ -29,6 +29,7 @@ def run_migrations_offline():
 
     """
     connectable = config.attributes.get("connection", None)
+    
 
     if connectable is None:
         raise Exception(
@@ -36,11 +37,17 @@ def run_migrations_offline():
             "command line, STOP and read the README."
         )
 
+    schema = config.attributes.get("schema", None)
+    extra_kwargs = {}
+    if schema:
+        extra_kwargs["version_table_schema"] = schema
+
     context.configure(
         url=connectable.url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
+        **extra_kwargs
     )
 
     with context.begin_transaction():
@@ -62,7 +69,12 @@ def run_migrations_online():
             "command line, STOP and read the README."
         )
 
-    context.configure(connection=connection, target_metadata=target_metadata)
+    schema = config.attributes.get("schema", None)
+    extra_kwargs = {}
+    if schema:
+        extra_kwargs["version_table_schema"] = schema
+
+    context.configure(connection=connection, target_metadata=target_metadata, **extra_kwargs)
 
     with context.begin_transaction():
         context.run_migrations()

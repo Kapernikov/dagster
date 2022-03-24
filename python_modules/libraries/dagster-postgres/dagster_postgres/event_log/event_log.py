@@ -58,20 +58,27 @@ class PostgresEventLogStorage(SqlEventLogStorage, ConfigurableClass):
 
     """
 
-    def __init__(self, postgres_url, should_autocreate_tables=True, inst_data=None):
+    def __init__(self, postgres_url, should_autocreate_tables=True, inst_data=None, schema=None):
         self._inst_data = check.opt_inst_param(inst_data, "inst_data", ConfigurableClassData)
         self.postgres_url = check.str_param(postgres_url, "postgres_url")
         self.should_autocreate_tables = check.bool_param(
             should_autocreate_tables, "should_autocreate_tables"
         )
+        self.schema = check.opt_str_param(schema, "schema")
+        if self.schema:
+            connect_args={'options': '-csearch_path={}'.format(self.schema)}
+        else:
+            connect_args={}
 
         self._disposed = False
 
         self._event_watcher = PostgresEventWatcher(self.postgres_url)
 
+
         # Default to not holding any connections open to prevent accumulating connections per DagsterInstance
         self._engine = create_engine(
-            self.postgres_url, isolation_level="AUTOCOMMIT", poolclass=db.pool.NullPool
+            self.postgres_url, isolation_level="AUTOCOMMIT", poolclass=db.pool.NullPool,
+            connect_args=connect_args
         )
         self._secondary_index_cache = {}
 
